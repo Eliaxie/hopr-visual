@@ -49,6 +49,7 @@
     ]
   },
   "devDependencies": {
+    "ethers": "^5.5.4",
     "react": "^17.0.2"
   }
 }
