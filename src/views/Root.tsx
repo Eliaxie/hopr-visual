@@ -77,14 +77,14 @@ const Root: FC = () => {
     let parsedEvent = iface.parseLog(newEvent)
     if(newEvent.args == null) return;
     switch(newEvent.args[2][4]){
-      case 0:{
+      case 2:{
         let startingNode = newEvent.args[0]
         let arrivingNode = newEvent.args[1]
         addEdge(startingNode, arrivingNode, dataset);
         addEdge(arrivingNode, startingNode, dataset);
       }
       break;
-      case 2:{
+      case 0:{
         let startingNode = newEvent.args[0]
         let arrivingNode = newEvent.args[1]
         removeEdge(startingNode, arrivingNode, dataset)
@@ -104,14 +104,15 @@ const Root: FC = () => {
     let datasetMap: DatasetMap
     let dataset: Dataset
     eventScanner().then(
-      (resultArray) => (
+      (resultArray) => ( () => {
         resultArray.map(
           (result) => {
             datasetBuilder(result, datasetMap)
-            console.log(datasetMap)
-            setDataset(datasetJsonify(datasetMap))
           }
         )
+        console.log(datasetMap)
+        setDataset(datasetJsonify(datasetMap))
+        }
       )
     )
     requestAnimationFrame(() => setDataReady(true));
