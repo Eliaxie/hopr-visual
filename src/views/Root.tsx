@@ -31,6 +31,7 @@ const Root: FC = () => {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   // Load data on mount:
+  /*
   useEffect(() => {
     fetch(`${process.env.PUBLIC_URL}/dataset.json`)
       .then((res) => res.json())
@@ -43,6 +44,10 @@ const Root: FC = () => {
         requestAnimationFrame(() => setDataReady(true));
       });
   }, []);
+  */
+  useEffect(() => {
+    
+  })
 
   if (!dataset) return null;
 
@@ -66,7 +71,7 @@ const Root: FC = () => {
         <GraphSettingsController hoveredNode={hoveredNode} />
         <GraphEventsController setHoveredNode={setHoveredNode} />
         <GraphDataController dataset={dataset} filters={filtersState} />
-
+        {!dataReady && (<>Loading data...</>)}
         {dataReady && (
           <>
             <div className="controls">
