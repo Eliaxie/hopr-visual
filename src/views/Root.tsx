@@ -48,16 +48,17 @@ const Root: FC = () => {
   }, []);
   */
 
-  function addEdge(node1: string, node2: string, dataset: DatasetMap){
+  function addEdge(node1: string, node2: string, dataset: DatasetMap): DatasetMap{
     let adjacentNodes = dataset.edges.get(node1)
     if(adjacentNodes === undefined){
       dataset.edges.set(node1, [node2])
     } else {
       dataset.edges.set(node1, adjacentNodes.concat(node2))
     }
+    return dataset
   }
 
-  function removeEdge(node1: string, node2: string, dataset: DatasetMap){
+  function removeEdge(node1: string, node2: string, dataset: DatasetMap): DatasetMap{
     let adjacentNodes = dataset.edges.get(node1)
     if(adjacentNodes === undefined) throw Error("Tring to delete a non-existent edge!")
     let node2index = adjacentNodes.findIndex((x) => x === node2)
@@ -70,51 +71,57 @@ const Root: FC = () => {
     } else {
       dataset.edges.set(node1, adjacentNodesTemp)
     }
+    return dataset
   }
 
-  function datasetBuilder(newEvent: ethers.Event, dataset: DatasetMap){
+  function datasetBuilder(newEvent: ethers.Event, dataset: DatasetMap): DatasetMap{
     let iface = new ethers.utils.Interface(targetABI);
     let parsedEvent = iface.parseLog(newEvent)
-    if(newEvent.args == null) return;
+    if(newEvent.args == null) return dataset;
+    try{
     switch(newEvent.args[2][4]){
       case 2:{
         let startingNode = newEvent.args[0]
         let arrivingNode = newEvent.args[1]
-        addEdge(startingNode, arrivingNode, dataset);
-        addEdge(arrivingNode, startingNode, dataset);
+        dataset = addEdge(startingNode, arrivingNode, dataset);
+        dataset = addEdge(arrivingNode, startingNode, dataset);
       }
       break;
       case 0:{
         let startingNode = newEvent.args[0]
         let arrivingNode = newEvent.args[1]
-        removeEdge(startingNode, arrivingNode, dataset)
-        removeEdge(arrivingNode, startingNode, dataset)        
+        dataset = removeEdge(startingNode, arrivingNode, dataset)
+        dataset = removeEdge(arrivingNode, startingNode, dataset)        
       }
       break;
       default: 
       break;
+    } 
+    } catch(err){
+      console.error(err)
     }
+    return dataset;
   }
 
   function datasetJsonify(dataset: DatasetMap): Dataset{
-    throw new Error()
+    throw new Error("Not implemented yet")
   }
 
   useEffect(() => {
-    let datasetMap: DatasetMap
+    let datasetMap: DatasetMap = {
+      clusters: [],
+      tags: [],
+      edges: new Map()
+    }
     let dataset: Dataset
-    eventScanner().then(
-      (resultArray) => ( () => {
-        resultArray.map(
-          (result) => {
-            datasetBuilder(result, datasetMap)
-          }
-        )
-        console.log(datasetMap)
-        setDataset(datasetJsonify(datasetMap))
-        }
-      )
-    )
+    console.log("importing data")
+    let data:ethers.Event[] = require('../data/rawdata.json');
+    console.log("started database build")
+    data.forEach(element => {
+      datasetMap = datasetBuilder(element, datasetMap)
+    });
+    console.log(datasetMap)
+    setDataset(datasetJsonify(datasetMap))
     requestAnimationFrame(() => setDataReady(true));
   }, [])
 
