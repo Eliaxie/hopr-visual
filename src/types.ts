@@ -1,3 +1,5 @@
+import { ethers } from "ethers";
+
 export interface NodeData {
   key: string;
   label: string;
@@ -29,4 +31,10 @@ export interface Dataset {
 export interface FiltersState {
   clusters: Record<string, boolean>;
   tags: Record<string, boolean>;
+}
+
+export interface DatasetMap {
+  edges: Map<string, string[]>
+  clusters: Cluster[];
+  tags: Tag[];
 }
