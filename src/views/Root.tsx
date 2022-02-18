@@ -8,7 +8,7 @@ import GraphSettingsController from "./GraphSettingsController";
 import GraphEventsController from "./GraphEventsController";
 import GraphDataController from "./GraphDataController";
 import DescriptionPanel from "./DescriptionPanel";
-import { Dataset, DatasetMap, FiltersState } from "../types";
+import { Cluster, Dataset, DatasetMap, FiltersState, NodeData, Tag } from "../types";
 import ClustersPanel from "./ClustersPanel";
 import SearchField from "./SearchField";
 import drawLabel from "../canvas-utils";
@@ -53,6 +53,10 @@ const Root: FC = () => {
     if(adjacentNodes === undefined){
       dataset.edges.set(node1, [node2])
     } else {
+      if( (adjacentNodes.find((x) => x === node2) != undefined )){ 
+        //console.error("Trying to add the same node twice")
+        return dataset
+      }
       dataset.edges.set(node1, adjacentNodes.concat(node2))
     }
     return dataset
@@ -60,10 +64,14 @@ const Root: FC = () => {
 
   function removeEdge(node1: string, node2: string, dataset: DatasetMap): DatasetMap{
     let adjacentNodes = dataset.edges.get(node1)
-    if(adjacentNodes === undefined) throw Error("Tring to delete a non-existent edge!")
+    if(adjacentNodes === undefined){
+      //console.error("Tring to delete a non-existent edge!")
+      return dataset
+    }
     let node2index = adjacentNodes.findIndex((x) => x === node2)
     if(node2index === undefined){
-      throw Error("Tring to delete a non-existent edge!")
+      //console.error("Tring to delete a non-existent edge!")
+      return dataset
     }
     let adjacentNodesTemp = adjacentNodes.splice(node2index, 1)
     if(adjacentNodesTemp.length === 0){
@@ -79,24 +87,24 @@ const Root: FC = () => {
     let parsedEvent = iface.parseLog(newEvent)
     if(newEvent.args == null) return dataset;
     try{
-    switch(newEvent.args[2][4]){
-      case 2:{
-        let startingNode = newEvent.args[0]
-        let arrivingNode = newEvent.args[1]
-        dataset = addEdge(startingNode, arrivingNode, dataset);
-        dataset = addEdge(arrivingNode, startingNode, dataset);
-      }
-      break;
-      case 0:{
-        let startingNode = newEvent.args[0]
-        let arrivingNode = newEvent.args[1]
-        dataset = removeEdge(startingNode, arrivingNode, dataset)
-        dataset = removeEdge(arrivingNode, startingNode, dataset)        
-      }
-      break;
-      default: 
-      break;
-    } 
+      switch(newEvent.args[2][4]){
+        case 2:{
+          let startingNode = newEvent.args[0]
+          let arrivingNode = newEvent.args[1]
+          dataset = addEdge(startingNode, arrivingNode, dataset);
+          dataset = addEdge(arrivingNode, startingNode, dataset);
+        }
+        break;
+        case 0:{
+          let startingNode = newEvent.args[0]
+          let arrivingNode = newEvent.args[1]
+          dataset = removeEdge(startingNode, arrivingNode, dataset)
+          dataset = removeEdge(arrivingNode, startingNode, dataset)        
+        }
+        break;
+        default: 
+        break;
+      } 
     } catch(err){
       console.error(err)
     }
@@ -104,7 +112,44 @@ const Root: FC = () => {
   }
 
   function datasetJsonify(dataset: DatasetMap): Dataset{
-    throw new Error("Not implemented yet")
+    let cluster: Cluster = {
+      key: "0",
+      color: "",
+      clusterLabel: ""
+    }
+    let tag: Tag = {
+      key: "nodes",
+      image: "tool.svg"
+    }
+    let toReturn: Dataset = {
+      nodes: [],
+      edges: [],
+      clusters: [cluster],
+      tags: [tag]
+    }
+    let i = 0
+    let j = 0
+    Array.from(dataset.edges.keys()).forEach(element => {
+      let newNode: NodeData = {
+        key: element,
+        label: element,
+        tag: "nodes",
+        URL: "",
+        cluster: "0",
+        x: i,
+        y: j
+      }
+      i++
+      if(i==90){
+        j++
+        i=0
+      }
+      toReturn.nodes.push(newNode)
+      dataset.edges.get(element)?.forEach(edge => {
+        toReturn.edges.push([element, edge])
+      })
+    });
+    return toReturn
   }
 
   useEffect(() => {
@@ -121,7 +166,9 @@ const Root: FC = () => {
       datasetMap = datasetBuilder(element, datasetMap)
     });
     console.log(datasetMap)
-    setDataset(datasetJsonify(datasetMap))
+    let database = datasetJsonify(datasetMap)
+    console.log(database)
+    setDataset(database)
     requestAnimationFrame(() => setDataReady(true));
   }, [])
 
