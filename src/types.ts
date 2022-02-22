@@ -8,6 +8,7 @@ export interface NodeData {
   cluster: string;
   x: number;
   y: number;
+  score: number
 }
 
 export interface Cluster {

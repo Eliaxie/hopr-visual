@@ -14,7 +14,7 @@ import SearchField from "./SearchField";
 import drawLabel from "../canvas-utils";
 import GraphTitle from "./GraphTitle";
 import TagsPanel from "./TagsPanel";
-import eventScanner, { targetABI } from "../event-scanner/event-scanner";
+import eventScanner, { hoprAddressFinder, targetABIChannelUpdated } from "../event-scanner/event-scanner";
 
 import "react-sigma-v2/lib/react-sigma-v2.css";
 import { GrClose } from "react-icons/gr";
@@ -23,7 +23,7 @@ import { BsArrowsFullscreen, BsFullscreenExit, BsZoomIn, BsZoomOut } from "react
 import { ethers } from "ethers";
 
 const Root: FC = () => {
-  const [showContents, setShowContents] = useState(false);
+  const [showContents, setShowContents] = useState(true);
   const [dataReady, setDataReady] = useState(false);
   const [dataset, setDataset] = useState<Dataset | null>(null);
   const [filtersState, setFiltersState] = useState<FiltersState>({
@@ -65,12 +65,12 @@ const Root: FC = () => {
   function removeEdge(node1: string, node2: string, dataset: DatasetMap): DatasetMap{
     let adjacentNodes = dataset.edges.get(node1)
     if(adjacentNodes === undefined){
-      //console.error("Tring to delete a non-existent edge!")
+      //console.error("Trying to delete a non-existent edge!")
       return dataset
     }
     let node2index = adjacentNodes.findIndex((x) => x === node2)
     if(node2index === undefined){
-      //console.error("Tring to delete a non-existent edge!")
+      //console.error("Trying to delete a non-existent edge!")
       return dataset
     }
     let adjacentNodesTemp = adjacentNodes.splice(node2index, 1)
@@ -83,7 +83,7 @@ const Root: FC = () => {
   }
 
   function datasetBuilder(newEvent: ethers.Event, dataset: DatasetMap): DatasetMap{
-    let iface = new ethers.utils.Interface(targetABI);
+    let iface = new ethers.utils.Interface(targetABIChannelUpdated);
     let parsedEvent = iface.parseLog(newEvent)
     if(newEvent.args == null) return dataset;
     try{
@@ -114,12 +114,12 @@ const Root: FC = () => {
   function datasetJsonify(dataset: DatasetMap): Dataset{
     let cluster: Cluster = {
       key: "0",
-      color: "",
-      clusterLabel: ""
+      color: "#5f83cc",
+      clusterLabel: "Nodes"
     }
     let tag: Tag = {
       key: "nodes",
-      image: "tool.svg"
+      image: "technology.svg"
     }
     let toReturn: Dataset = {
       nodes: [],
@@ -129,30 +129,38 @@ const Root: FC = () => {
     }
     let i = 0
     let j = 0
-    Array.from(dataset.edges.keys()).forEach(element => {
+    let i_max = 0
+    Array.from(dataset.edges.keys()).forEach(async element => {
       let newNode: NodeData = {
         key: element,
-        label: element,
+        label: await hoprAddressFinder(element),
         tag: "nodes",
-        URL: "",
+        URL: "https://blockscout.com/xdai/mainnet/address/" + element,
         cluster: "0",
         x: i,
+        score: dataset.edges.get(element)?.length ?? 0,
         y: j
       }
-      i++
-      if(i==90){
-        j++
-        i=0
+      i = i + newNode.score
+      if(i_max < newNode.score){
+        i_max = newNode.score
       }
-      toReturn.nodes.push(newNode)
+      if(i > 150){
+        j = j + Math.sqrt(i_max)
+        i = 0
+        i_max = 0
+      }
       dataset.edges.get(element)?.forEach(edge => {
         toReturn.edges.push([element, edge])
       })
+      toReturn.nodes.push(newNode)
     });
     return toReturn
   }
 
-  useEffect(() => {
+   useEffect(() => {
+    
+    //###USE THIS TO GENERATE THE JSON (very heavy calculations)!
     let datasetMap: DatasetMap = {
       clusters: [],
       tags: [],
@@ -165,10 +173,10 @@ const Root: FC = () => {
     data.forEach(element => {
       datasetMap = datasetBuilder(element, datasetMap)
     });
-    console.log(datasetMap)
     let database = datasetJsonify(datasetMap)
     console.log(database)
-    setDataset(database)
+    
+    setDataset(database)//require('../data/processedv2.json'))
     requestAnimationFrame(() => setDataReady(true));
   }, [])
 
@@ -183,6 +191,7 @@ const Root: FC = () => {
           labelRenderer: drawLabel,
           defaultNodeType: "image",
           defaultEdgeType: "arrow",
+          renderEdgeLabels: true,
           labelDensity: 0.07,
           labelGridCellSize: 60,
           labelRenderedSizeThreshold: 15,
