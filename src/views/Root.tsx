@@ -53,7 +53,7 @@ const Root: FC = () => {
     if(adjacentNodes === undefined){
       dataset.edges.set(node1, [node2])
     } else {
-      if( (adjacentNodes.find((x) => x === node2) != undefined )){ 
+      if( (adjacentNodes.find((x) => x === node2) !== undefined )){ 
         //console.error("Trying to add the same node twice")
         return dataset
       }
