@@ -8,7 +8,7 @@ import GraphSettingsController from "./GraphSettingsController";
 import GraphEventsController from "./GraphEventsController";
 import GraphDataController from "./GraphDataController";
 import DescriptionPanel from "./DescriptionPanel";
-import { Cluster, Dataset, DatasetMap, FiltersState, NodeData, Tag } from "../types";
+import { Cluster, Dataset, DatasetMap, FiltersState, NodeData, NodeWithStats, Tag } from "../types";
 import ClustersPanel from "./ClustersPanel";
 import SearchField from "./SearchField";
 import drawLabel from "../canvas-utils";
@@ -50,14 +50,18 @@ const Root: FC = () => {
 
   function addEdge(node1: string, node2: string, dataset: DatasetMap): DatasetMap{
     let adjacentNodes = dataset.edges.get(node1)
+    let nodeWithStats: NodeWithStats = {
+      node: node2,
+      stats: "stats"
+    }
     if(adjacentNodes === undefined){
-      dataset.edges.set(node1, [node2])
+      dataset.edges.set(node1, [nodeWithStats])
     } else {
-      if( (adjacentNodes.find((x) => x === node2) !== undefined )){ 
+      if( (adjacentNodes.find((x) => x.node === node2) !== undefined )){ 
         //console.error("Trying to add the same node twice")
         return dataset
       }
-      dataset.edges.set(node1, adjacentNodes.concat(node2))
+      dataset.edges.set(node1, adjacentNodes.concat(nodeWithStats))
     }
     return dataset
   }
@@ -68,7 +72,7 @@ const Root: FC = () => {
       //console.error("Trying to delete a non-existent edge!")
       return dataset
     }
-    let node2index = adjacentNodes.findIndex((x) => x === node2)
+    let node2index = adjacentNodes.findIndex((x) => x.node === node2)
     if(node2index === undefined){
       //console.error("Trying to delete a non-existent edge!")
       return dataset
@@ -161,6 +165,7 @@ const Root: FC = () => {
    useEffect(() => {
     
     //###USE THIS TO GENERATE THE JSON (very heavy calculations)!
+    /*
     let datasetMap: DatasetMap = {
       clusters: [],
       tags: [],
@@ -175,8 +180,8 @@ const Root: FC = () => {
     });
     let database = datasetJsonify(datasetMap)
     console.log(database)
-    
-    setDataset(database)//require('../data/processedv2.json'))
+    */
+    setDataset(require('../data/processedv4.json'))
     requestAnimationFrame(() => setDataReady(true));
   }, [])
 

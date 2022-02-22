@@ -24,7 +24,7 @@ export interface Tag {
 
 export interface Dataset {
   nodes: NodeData[];
-  edges: [string, string][];
+  edges: [string, NodeWithStats][];
   clusters: Cluster[];
   tags: Tag[];
 }
@@ -34,8 +34,13 @@ export interface FiltersState {
   tags: Record<string, boolean>;
 }
 
+export interface NodeWithStats {
+  node: string,
+  stats: string
+}
+
 export interface DatasetMap {
-  edges: Map<string, string[]>
+  edges: Map<string, NodeWithStats[]>
   clusters: Cluster[];
   tags: Tag[];
 }
