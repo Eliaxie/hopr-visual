@@ -165,23 +165,23 @@ const Root: FC = () => {
    useEffect(() => {
     
     //###USE THIS TO GENERATE THE JSON (very heavy calculations)!
-    /*
-    let datasetMap: DatasetMap = {
-      clusters: [],
-      tags: [],
-      edges: new Map()
-    }
-    let dataset: Dataset
-    console.log("importing data")
-    let data:ethers.Event[] = require('../data/rawdata.json');
-    console.log("started database build")
-    data.forEach(element => {
-      datasetMap = datasetBuilder(element, datasetMap)
-    });
-    let database = datasetJsonify(datasetMap)
-    console.log(database)
-    */
-    setDataset(require('../data/processedv4.json'))
+
+    //let datasetMap: DatasetMap = {
+    //  clusters: [],
+    //  tags: [],
+    //  edges: new Map()
+    //}
+    //let dataset: Dataset
+    //console.log("importing data")
+    //let data:ethers.Event[] = require('../data/rawdata.json');
+    //console.log("started database build")
+    //data.forEach(element => {
+    //  datasetMap = datasetBuilder(element, datasetMap)
+    //});
+    //let database = datasetJsonify(datasetMap)
+    //console.log(database)
+
+    setDataset(require('../data/processedv5.json'))
     requestAnimationFrame(() => setDataReady(true));
   }, [])
 
