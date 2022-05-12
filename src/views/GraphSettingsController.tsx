@@ -40,7 +40,7 @@ const GraphSettingsController: FC<{ hoveredNode: string | null }> = ({ children,
             graph.hasEdge(node, debouncedHoveredNode) ||
             graph.hasEdge(debouncedHoveredNode, node)
               ? { ...data, zIndex: 1 }
-              : { ...data, zIndex: 0, label: "", color: NODE_FADE_COLOR, image: null, highlighted: false }
+              : { ...data, zIndex: 0, color: NODE_FADE_COLOR, image: null, highlighted: false }
         : null,
     );
     sigma.setSetting(
